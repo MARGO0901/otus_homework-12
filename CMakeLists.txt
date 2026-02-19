@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.0.0 FATAL_ERROR)
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VERSION 0.0.${PATCH_VERSION})
 
-project(kdd99 CXX)
+project(fashion_mnist VERSION ${PROJECT_VERSION} CXX)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Debug)
@@ -20,7 +20,7 @@ conan_cmake_run(
 set(CMAKE_CXX_STANDARD 17)
 
 file(GLOB HRDS
-    include/kdd99/*.h
+    include/fashion_mnist/*.h
 )
 file(GLOB SRCS
     src/*.cpp
