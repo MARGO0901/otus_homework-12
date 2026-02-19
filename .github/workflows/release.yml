@@ -23,27 +23,19 @@ jobs:
           conan profile new default --detect
 
       # Сборка проекта
-      - name: Configure CMake
+      - name: Build project
         run: |
-          mkdir -p build
-          cmake -B build \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DPATCH_VERSION=${{ github.run_number }}
-      
-      - name: Build
-        run: cmake --build build --parallel $(nproc)
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DPATCH_VERSION=${{ github.run_number }}
+          make
+          cpack -G DEB
 
       # Запуск тестов
       - name: Run tests
         run: |
           cd build
           ctest --output-on-failure
-
-      # Создание пакета
-      - name: Create package
-        run: |
-          cd build
-          cpack -G DEB
 
       - name: Create Release
         id: create_release
@@ -63,6 +55,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./fashion_mnist-0.0.${{ github.run_number }}-Linux.deb
+          asset_path: ./build/fashion_mnist-0.0.${{ github.run_number }}-Linux.deb
           asset_name: fashion_mnist-0.0.${{ github.run_number }}-Linux.deb
           asset_content_type: application/vnd.debian.binary-package
