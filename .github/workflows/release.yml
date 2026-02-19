@@ -20,7 +20,7 @@ jobs:
       # конфигурация Conan
       - name: Configure Conan
         run: |
-          conan profile detect --force
+          conan profile new default --detect
 
       # Сборка проекта
       - name: Configure CMake
