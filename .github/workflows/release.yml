@@ -1,0 +1,68 @@
+name: 'C++ CI'
+
+on:
+  push:
+    branches:
+      - main
+      - feature/github_actions
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: sdukshis/cppml:latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      # конфигурация Conan
+      - name: Configure Conan
+        run: |
+          conan profile detect --force
+
+      # Сборка проекта
+      - name: Configure CMake
+        run: |
+          mkdir -p build
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DPATCH_VERSION=${{ github.run_number }}
+      
+      - name: Build
+        run: cmake --build build --parallel $(nproc)
+
+      # Запуск тестов
+      - name: Run tests
+        run: |
+          cd build
+          ctest --output-on-failure
+
+      # Создание пакета
+      - name: Create package
+        run: |
+          cd build
+          cpack -G DEB
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./fashion_mnist-0.0.${{ github.run_number }}-Linux.deb
+          asset_name: fashion_mnist-0.0.${{ github.run_number }}-Linux.deb
+          asset_content_type: application/vnd.debian.binary-package
